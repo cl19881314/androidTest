@@ -16,6 +16,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".test1.MyViewGroupActivity"/>
+        <activity android:name=".test2.ShowAnyItemActivity"/>
+        <activity android:name=".test3.ContactsActivity"/>
     </application>
 
 </manifest>

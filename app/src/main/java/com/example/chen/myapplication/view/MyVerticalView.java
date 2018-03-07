@@ -2,7 +2,6 @@ package com.example.chen.myapplication.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -22,130 +21,87 @@ public class MyVerticalView extends ViewGroup {
     public MyVerticalView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
-//
-//    @Override
-//    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-////        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-////        measureChildren(widthMeasureSpec, heightMeasureSpec);
-//        // 计算所有child view 要占用的空间
-//        int desireWidth = 0;
-//        int desireHeight = 0;
-//        int count = getChildCount();
-//        for (int i = 0; i < count; ++i) {
-//            View v = getChildAt(i);
-//            if (v.getVisibility() != View.GONE) {
-//                LayoutParams lp = (LayoutParams) v.getLayoutParams();
-//                measureChildWithMargins(v, widthMeasureSpec, 0,
-//                        heightMeasureSpec, 0);
-//
-//                    desireWidth = Math.max(desireWidth, v.getMeasuredWidth()
-//                            + lp.leftMargin + lp.rightMargin);
-//                    desireHeight += v.getMeasuredHeight() + lp.topMargin
-//                            + lp.bottomMargin;
-//            }
-//        }
-//
-//        // count with padding
-//        desireWidth += getPaddingLeft() + getPaddingRight();
-//        desireHeight += getPaddingTop() + getPaddingBottom();
-//
-//        // see if the size is big enough
-//        desireWidth = Math.max(desireWidth, getSuggestedMinimumWidth());
-//        desireHeight = Math.max(desireHeight, getSuggestedMinimumHeight());
-//
-//        setMeasuredDimension(resolveSize(desireWidth, widthMeasureSpec),
-//                resolveSize(desireHeight, heightMeasureSpec));
-//    }
-//
-//    @Override
-//    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-//        int count = getChildCount();
-//        int childMeasureWidth = 0;
-//        int childMeasureHeight = 0;
-//        int height = top + getPaddingTop();
-//        View child;
-//        for (int i = 0; i < count; i++) {
-//            child = getChildAt(i);
-//            if (child.getVisibility() != GONE) {
-//                childMeasureWidth = child.getMeasuredWidth();
-//                childMeasureHeight = child.getMeasuredHeight();
-//                right = left + childMeasureWidth;
-//                top = height;
-//                bottom = height + childMeasureHeight;
-//                child.layout(left+getPaddingLeft(), top, right, bottom);
-//                height = bottom;
-//            }
-//        }
-//    }
-
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int width = getPaddingLeft();
-        int height = getPaddingTop();
-        final int count = getChildCount();
-        for (int i = 0; i < count; i++) {
-            View child = getChildAt(i);
-            measureChild(child, widthMeasureSpec, heightMeasureSpec);
-            LayoutParams lp = (LayoutParams) child.getLayoutParams();
-            width = getPaddingLeft();
-            lp.x = width;
-            lp.y = height;
-            width += child.getMeasuredWidth();
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
+        int widthSize = MeasureSpec.getSize(widthMeasureSpec);
+        int heightMode = MeasureSpec.getMode(heightMeasureSpec);
+        int heightSize = MeasureSpec.getSize(heightMeasureSpec);
+        measureChildren(widthMeasureSpec, heightMeasureSpec);
+        int childCount = getChildCount();
+        int childWidth = 0;
+        int childHeight = 0;
+        int parentHeight = 0;
+        for (int i = 0; i < childCount; i++) {
+            View childAt = getChildAt(i);
+            if (childAt.getVisibility() == GONE){
+                continue;
+            }
+            MarginLayoutParams params = (MarginLayoutParams) childAt.getLayoutParams();
+            int w = childAt.getMeasuredWidth() + params.leftMargin + params.rightMargin;
+            int h = childAt.getMeasuredHeight() + params.topMargin + params.bottomMargin;
+            if (childWidth < w) {
+                childWidth = w;
+            }
+            if (childHeight < h) {
+                childHeight = h;
+            }
+            parentHeight += h;
         }
-        width += getPaddingRight();
-        height += getChildAt(getChildCount() - 1).getMeasuredHeight() + getPaddingBottom();
-        Log.d("gnt","----");
-        setMeasuredDimension(resolveSize(width, widthMeasureSpec),resolveSize(height, heightMeasureSpec));
+        //开始处理wrap_content,如果一个子元素都没有，就设置为0
+        if (childCount == 0) {
+            setMeasuredDimension(0, 0);
+        } else if (widthMode == MeasureSpec.AT_MOST && heightMode == MeasureSpec.AT_MOST) {
+            //ViewGroup，宽，高都是wrap_content，根据我们的需求，宽度是子控件的宽度，高度则是所有子控件的总和
+            setMeasuredDimension(childWidth, parentHeight);
+        } else if (widthMode == MeasureSpec.AT_MOST) {
+            //ViewGroup的宽度为wrap_content,则高度不需要管，宽度还是自控件的宽度
+            setMeasuredDimension(childWidth, heightSize);
+        } else if (heightMode == MeasureSpec.AT_MOST) {
+            //ViewGroup的高度为wrap_content,则宽度不需要管，高度为子View的高度和
+            setMeasuredDimension(widthSize, parentHeight);
+        }
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        final int count = getChildCount();
-        int height = t;
+        int height = 0;
+        int count = getChildCount();
+        View child;
+        MarginLayoutParams params;
         for (int i = 0; i < count; i++) {
-            View child = getChildAt(i);
-            Log.d("gnt","--4444-");
-            LayoutParams lp = (LayoutParams) child.getLayoutParams();
-            child.layout(lp.x, height, lp.x + child.getMeasuredWidth(), height + lp.y + child.getMeasuredHeight());
-            height =  lp.y + child.getMeasuredHeight();
+            child = getChildAt(i);
+            if (child.getVisibility() == GONE){
+                continue;
+            }
+            params = (MarginLayoutParams) child.getLayoutParams();
+            int left = params.leftMargin;
+            int top = params.topMargin + height;
+            int right = left + child.getMeasuredWidth();
+            int bottom = top + child.getMeasuredHeight();
+            child.layout(left, top, right, bottom);
+            height += child.getMeasuredHeight();
         }
     }
 
+
     @Override
-    protected boolean checkLayoutParams(ViewGroup.LayoutParams p) {
-        return p instanceof LayoutParams;
+    public LayoutParams generateLayoutParams(AttributeSet attrs) {
+        return new MarginLayoutParams(getContext(), attrs);
     }
 
     @Override
     protected LayoutParams generateDefaultLayoutParams() {
-        return new LayoutParams(LayoutParams.WRAP_CONTENT,
-                LayoutParams.WRAP_CONTENT);
+        return new MarginLayoutParams(LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT);
     }
 
     @Override
-    public LayoutParams generateLayoutParams(AttributeSet attrs) {
-        return new LayoutParams(getContext(), attrs);
+    protected LayoutParams generateLayoutParams(LayoutParams p) {
+        return new MarginLayoutParams(p);
     }
 
-    @Override
-    protected LayoutParams generateLayoutParams(ViewGroup.LayoutParams p) {
-        return new LayoutParams(p.width, p.height);
-    }
-
-    public static class LayoutParams extends ViewGroup.LayoutParams {
-        int x;
-        int y;
-        public int verticalSpacing;
-
-        public LayoutParams(Context context, AttributeSet attrs) {
-            super(context, attrs);
-        }
-
-        public LayoutParams(int w, int h) {
-            super(w, h);
-        }
-
-    }
 }
 
