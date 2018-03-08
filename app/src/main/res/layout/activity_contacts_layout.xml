@@ -10,14 +10,18 @@
     cube_ptr:ptr_pull_to_fresh="false"
     cube_ptr:ptr_ratio_of_header_height_to_refresh="1.2"
     cube_ptr:ptr_resistance="1.7">
-
-    <!--这里可以是任意view-->
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:clickable="true"
-        android:gravity="center"
-        android:text="I am a TextView"
-        android:textSize="30sp" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <android.support.design.widget.TabLayout
+            android:id="@+id/tab_ayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
 
+        <FrameLayout
+            android:id="@+id/fl_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
 </in.srain.cube.views.ptr.PtrFrameLayout>
